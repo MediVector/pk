@@ -1,0 +1,115 @@
+---------------------PK NEWS----------------------------------------------
+
+PK is an R package for inference for PK parameters in complete and 
+incomplete data designs based on non-compartmental methods. If you are 
+using the package, please cite it as 
+
+Jaki T and Wolfsegger MJ (2011) Estimation of pharmacokinetic parameters 
+with the R package PK. Pharmaceutical Statistics. Vol 10(No 3), 294-288. 
+DOI: 10.1002/pst.449"
+
+Question or suggestions about the package can be send to
+
+   jaki.thomas@gmail.com
+or
+   martin_wolfsegger@baxter.com
+
+--------------------CHANGE LOG--------------------------------------------
+Version 1.3-2
+
+  o A bug during start-up is corrected
+
+--------------------------------------------------------------------------
+Version 1.3-1
+
+  o depreciated functions as.real replaced by as.double
+
+--------------------------------------------------------------------------
+Version 1.3-0
+
+  o Flexible batch designs (Jaki & Wolfsegger, Statistics in Medicine 2012)
+    implemented. These designs allow the same timepoints to be used in 
+    different batches. 
+    Functions updated:  auc.batch
+    Help files updated: auc.batch, eqv.batch
+
+  o Methods to compute PK parameters such as Clearance in flexible
+    batch designs have been added in functions nca and nca.batch
+
+  o Help for nca updated
+
+  o Help for eqv.ssd, eqv.batch and eqv.complete has been merged with eqv
+
+--------------------------------------------------------------------------
+Version 1.2-5
+
+  o Code in biexp and lee updated
+
+  o Several examples in help files biexp and lee added 
+
+--------------------------------------------------------------------------
+Version 1.2-4
+
+  o The help file for the function nca has been corrected
+
+  o Citation information updated
+
+--------------------------------------------------------------------------
+Version 1.2-3
+
+  o A bug in an internal function to handle the data argument in batch 
+    designs fixed
+
+  o Citation information updated
+
+  o A bug in the nca.complete function fixed
+
+  o A bug in the summary function fixed
+
+--------------------------------------------------------------------------
+Version 1.2-2
+
+  o A repeated dose toxicity dataset included
+
+  o Help on nca function expanded
+
+  o A bug in the print function fixed
+
+  o auc.complete updated to handle individual AUCs
+
+  o Additional example in help for auc.complete included
+
+  o Function nca.complete included
+
+--------------------------------------------------------------------------
+Version 1.2-1
+
+  o Default option for method lee changed to ols
+
+  o Functionality to create plots by group included
+
+  o Some formating changes in the print/summary functions
+
+  o Bug in print.PKtest fixed
+
+  o Bug in test fixed
+
+--------------------------------------------------------------------------
+Version 1.2-0
+
+  o Multiple datasets included
+
+  o Bug in auc.batch fixed
+
+  o Functions can now be called using data in FDA SEND format - http://www.cdisc.org/send
+
+  o Functions est, ci and test have been included to obtain point estimates, confidence intervals and hypothesis tests
+
+  o Functions auc, eqv, nca have been aligned
+
+  o Methods to test for bioequivalence in batch designs for independent and dependent aucs have been added in functions eqv and eqv.batch
+
+  o Methods to compute PK parameters such as MRT and Clearance in serial sampling designs have been added in functions nca and nca.ssd
+
+  o Multiple references added and updated
+
