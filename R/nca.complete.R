@@ -1,12 +1,12 @@
 nca.complete <- function(conc, time, n.tail=3, dose=0, method=c("z", "boott"), conf.level=0.95, 
-     nsample=1000, data) {
+     nsample=1000, conc.name="conc", time.name="time", data) {
 
   if(!missing(data)){
     cnames <- colnames(data)
-    if(!any(cnames=='conc')){stop("data does not contain a variable conc")}
-    if(!any(cnames=='time')){stop("data does not contain a variable time")}
-    conc <- data$conc
-    time <- data$time
+    if(!any(cnames==conc.name)){stop("data does not contain a variable conc")}
+    if(!any(cnames==time.name)){stop("data does not contain a variable time")}
+    conc <- data[,eval(conc.name)]
+    time <- data[,eval(time.name)]
   }
 
   method <- "z"
