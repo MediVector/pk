@@ -17,7 +17,7 @@ nca.complete <- function(conc, time, n.tail=3, dose=0, method=c("z", "boott"), c
   tp <- nrow(dat)/n
   conc.list <-  split(dat[,"conc"],rep(1:n,tp))
   
-  ests <- matrix(NA,nrow=8,ncol=n)
+  ests <- matrix(NA,nrow=7,ncol=n)
   for (i in 1:n) {
 
     res <- nca.ssd(conc=rep(conc.list[[i]],2), time=rep(unique(dat[,"time"]),2),  doses=doses, n.tail=n.tail, dose=dose, method=method, conf.level=conf.level)
@@ -30,7 +30,7 @@ nca.complete <- function(conc, time, n.tail=3, dose=0, method=c("z", "boott"), c
     message("Note that the geometric mean of the individual parameters is reported.\n") 
   }
   res$est <- matrix(apply(ests,1,prod)^(1/n),ncol=1)
-  rownames(res$est) <- c('AUC to tlast', 'AUC to infinity', 'AUC Dose', 'AUMC to infinity', 'Mean residence time', 'non-compartmental half-life', 'Clearance', 'Volume of distribution at steady state') 
+  rownames(res$est) <- c('AUC to tlast', 'AUC to infinity', 'AUMC to infinity', 'Mean residence time', 'non-compartmental half-life', 'Clearance', 'Volume of distribution at steady state') 
   res$CIs[,"est"]<-  apply(ests,1,prod)^(1/n)
   ## set CIs NA as complete data design is used
   res$CIs[,c("lower","upper")]<- NA

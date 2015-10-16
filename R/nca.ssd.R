@@ -66,11 +66,6 @@ nca.ssd <- function(conc, time, doses, n.tail=3, dose=0, method=c("z", "boott"),
     var <- (vec%*%M%*%vec)
     auc <- c(est, var)
 
-    # AUC / Dose
-
-    est <- auc[1] / d
-    aucDose <- c(est, est)
-
     # AUMC from 0 TO infinity #
     vec <- c(t[i]*w[i], t[J]*w[J] + t[J]/lambda + 1/lambda^2, rep(0,k), ((t[J]*lambda+2)*xq[J]*u)/lambda^3)
     est <- sum(t*w*xq) + (xq[J]/lambda)*(t[J] + 1/lambda)
@@ -87,17 +82,17 @@ nca.ssd <- function(conc, time, doses, n.tail=3, dose=0, method=c("z", "boott"),
     mrt <- c(est, var)		
 
     # half-life #
-    hl <- c(log(2)*mrt[1], log(2)^2*mrt[2])
-
-    hl2 <- log(2)/lambda
-    print(hl2)
+    #hl <- c(log(2)*mrt[1], log(2)^2*mrt[2])
+    
+    # don't know how to calculate the vec so using est value in both places.
+    hl <- c(log(2)/lambda, log(2)/lambda)
 
     # clearance #
     vec <- c(-w[i]*d/auc[1]^2, (-d-d*lambda*w[J])/(lambda*auc[1]^2), rep(0,k), (-1)*(xq[J]*u*d)/(lambda^2*auc[1]^2))
     est <- d / auc[1]
     var <- (vec%*%M%*%vec)
     cls <- c(est, var)
-	
+
     # Volume of distribution at steady state
     A <- 2*xq[J] + 2*lambda*xq[J]*t[J] + 2*lambda^2*sum(t*w*xq)
     B1 <- auc[1]*lambda - 2*xq[J] - 2*lambda*xq[J]*t[J] - 2*lambda*xq[J]*w[J] + auc[1]*lambda^2*t[J] 
@@ -109,15 +104,14 @@ nca.ssd <- function(conc, time, doses, n.tail=3, dose=0, method=c("z", "boott"),
     c2 <- (d*B) / (auc[1]^3 * lambda^3)
     c3 <- (d*xq[J]*u*C) / (lambda^4 * auc[1]^3)
     vec <- c(c1, c2, rep(0,k), c3)
-    est <- d*aumc[1] / auc[1]^2
+#    est <- d*aumc[1] / auc[1]^2
+    est <- cls / lambda
     var <- (vec%*%M%*%vec)
     vss <- c(est, var)
 
     # summarize results #
-    #res <- rbind(auc, aumc, mrt, hl, cls, vss)
-    #rownames(res) <- c('AUC to infinity', 'AUMC to infinity', 'Mean residence time', 'Half-life', 'Clearance', 'Volume of Distribution')
-    res <- rbind(auc, aucDose, aumc, mrt, hl, cls, vss)
-    rownames(res) <- c('AUC to infinity', 'AUC Infinify Obs Norm by Dose', 'AUMC to infinity', 'Mean residence time', 'Half-life', 'Clearance', 'Volume of Distribution')
+    res <- rbind(auc, aumc, mrt, hl, cls, vss)
+    rownames(res) <- c('AUC to infinity', 'AUMC to infinity', 'Mean residence time', 'Half-life', 'Clearance', 'Volume of Distribution')
 return(res)
   }
 
@@ -132,15 +126,12 @@ return(res)
 
     # get estimates and variances
     obsv.parms <- pkparms(time=time, conc=conc, d=d, k=k, w=w, t=t, J=J)
-    message("num rows0: ",nrow(obsv.parms))
     # get asympotic confidence intervals at level 1-alpha
     z <- qnorm(1-alpha/2)
     obsv.stderr <- sqrt(obsv.parms[,2]/n)
     asymp.lower <- obsv.parms[,1] - obsv.stderr*z
     asymp.upper <- obsv.parms[,1] + obsv.stderr*z
-    message("num rows1: ",nrow(asymp.lower))
-    message("num rows2: ",nrow(asymp.upper))
-    asymp <- data.frame(est=obsv.parms[,1], stderr=obsv.stderr, lower=asymp.lower, upper=asymp.upper,method=rep('z',7))
+    asymp <- data.frame(est=obsv.parms[,1], stderr=obsv.stderr, lower=asymp.lower, upper=asymp.upper,method=rep('z',6))
     res <- asymp
     if(nsample>0){
       boot.stat <- matrix(nrow=nsample, ncol=6)
@@ -201,7 +192,7 @@ return(res)
     res <- rbind(auc.obs[1,-5],res)
   }
 
-  r.names <- c('AUC to tlast', 'AUC Dose', 'AUC to infinity', 'AUMC to infinity', 'Mean residence time', 'non-compartmental half-life', 'Clearance', 'Volume of distribution at steady state')
+  r.names <- c('AUC to tlast', 'AUC to infinity', 'AUMC to infinity', 'Mean residence time', 'non-compartmental half-life', 'Clearance', 'Volume of distribution at steady state')
   rownames(res) <- paste(conf.level*100,'% CI for the ', rep(r.names,each=length(levels(res$method))), ' using a ', sort(levels(res$method),decreasing=TRUE),' distribution', sep='')
 
   if(!any(method=='z')){
