@@ -1,4 +1,4 @@
-nca.ssd <- function(conc, time, n.tail=3, dose=0, method=c("z", "boott"), conf.level=0.95, nsample=1000, data){
+nca.ssd <- function(conc, time, doses, n.tail=3, dose=0, method=c("z", "boott"), conf.level=0.95, nsample=1000, data){
 
   # function to define variance-covariance matrix
   sigma <- function(t, J, time, conc){
@@ -13,8 +13,10 @@ nca.ssd <- function(conc, time, n.tail=3, dose=0, method=c("z", "boott"), conf.l
     sy <- tapply(data[,2], data[,3], var)
 
     # variance-covariance matrix of observed and log-transformed data
-    for(i in 1:J){      dintern <- subset(data, data[,3]==t[i])
-      sigma[i+J,i] <- cov(dintern[,1], dintern[,2])      sigma[i,i+J] <- sigma[i+J,i] 
+    for(i in 1:J){
+      dintern <- subset(data, data[,3]==t[i])
+      sigma[i+J,i] <- cov(dintern[,1], dintern[,2])
+      sigma[i,i+J] <- sigma[i+J,i] 
     }
     diag(sigma) <- c(sx, sy)
     sigma <- ifelse(is.na(sigma), 0, sigma)
@@ -45,7 +47,15 @@ nca.ssd <- function(conc, time, n.tail=3, dose=0, method=c("z", "boott"), conf.l
     a <- c(rep(NA, k), t[i]-mean(t[i]))			
     u <- c(rep(NA, k), a[i]/sum(a[i]^2))	
     lambda <- sum(u[i]*yq[i])*(-1)
-	
+    
+#     print(t)
+#     print(k)
+#     print(J)
+#     print(i)
+#     print(a)
+#     print(u)
+#     print(lambda)
+        
     # define index for vectorizations
     u <- u[!is.na(u)]
     i <- c(1:(J-1))
@@ -55,6 +65,11 @@ nca.ssd <- function(conc, time, n.tail=3, dose=0, method=c("z", "boott"), conf.l
     est <- sum(w*xq) + xq[J]/lambda
     var <- (vec%*%M%*%vec)
     auc <- c(est, var)
+
+    # AUC / Dose
+
+    est <- auc[1] / d
+    aucDose <- c(est, est)
 
     # AUMC from 0 TO infinity #
     vec <- c(t[i]*w[i], t[J]*w[J] + t[J]/lambda + 1/lambda^2, rep(0,k), ((t[J]*lambda+2)*xq[J]*u)/lambda^3)
@@ -73,6 +88,9 @@ nca.ssd <- function(conc, time, n.tail=3, dose=0, method=c("z", "boott"), conf.l
 
     # half-life #
     hl <- c(log(2)*mrt[1], log(2)^2*mrt[2])
+
+    hl2 <- log(2)/lambda
+    print(hl2)
 
     # clearance #
     vec <- c(-w[i]*d/auc[1]^2, (-d-d*lambda*w[J])/(lambda*auc[1]^2), rep(0,k), (-1)*(xq[J]*u*d)/(lambda^2*auc[1]^2))
@@ -96,9 +114,11 @@ nca.ssd <- function(conc, time, n.tail=3, dose=0, method=c("z", "boott"), conf.l
     vss <- c(est, var)
 
     # summarize results #
-    res <- rbind(auc, aumc, mrt, hl, cls, vss)
-    rownames(res) <- c('AUC to infinity', 'AUMC to infinity', 'Mean residence time', 'Half-life', 'Clearance', 'Volume of Distribution')
-    return(res)
+    #res <- rbind(auc, aumc, mrt, hl, cls, vss)
+    #rownames(res) <- c('AUC to infinity', 'AUMC to infinity', 'Mean residence time', 'Half-life', 'Clearance', 'Volume of Distribution')
+    res <- rbind(auc, aucDose, aumc, mrt, hl, cls, vss)
+    rownames(res) <- c('AUC to infinity', 'AUC Infinify Obs Norm by Dose', 'AUMC to infinity', 'Mean residence time', 'Half-life', 'Clearance', 'Volume of Distribution')
+return(res)
   }
 
 
@@ -112,12 +132,15 @@ nca.ssd <- function(conc, time, n.tail=3, dose=0, method=c("z", "boott"), conf.l
 
     # get estimates and variances
     obsv.parms <- pkparms(time=time, conc=conc, d=d, k=k, w=w, t=t, J=J)
+    message("num rows0: ",nrow(obsv.parms))
     # get asympotic confidence intervals at level 1-alpha
     z <- qnorm(1-alpha/2)
     obsv.stderr <- sqrt(obsv.parms[,2]/n)
     asymp.lower <- obsv.parms[,1] - obsv.stderr*z
     asymp.upper <- obsv.parms[,1] + obsv.stderr*z
-    asymp <- data.frame(est=obsv.parms[,1], stderr=obsv.stderr, lower=asymp.lower, upper=asymp.upper,method=rep('z',6))
+    message("num rows1: ",nrow(asymp.lower))
+    message("num rows2: ",nrow(asymp.upper))
+    asymp <- data.frame(est=obsv.parms[,1], stderr=obsv.stderr, lower=asymp.lower, upper=asymp.upper,method=rep('z',7))
     res <- asymp
     if(nsample>0){
       boot.stat <- matrix(nrow=nsample, ncol=6)
@@ -165,10 +188,10 @@ nca.ssd <- function(conc, time, n.tail=3, dose=0, method=c("z", "boott"), conf.l
   data <- subset(data, data$conc >= 0)
   conc <- data$conc
   time <- data$time
+  dose <- doses[1]
 
   k <- length(unique(time)) - n.tail
   alpha <- 1-conf.level
-
   res <- get.confint(conc=conc, time=time, k=k, d=dose, alpha=alpha, nsample=nsample)
   auc.obs <- auc.ssd(conc=conc, time=time, method=levels(res$method),conf.level=conf.level, nsample=nsample)$CIs
 
@@ -178,7 +201,7 @@ nca.ssd <- function(conc, time, n.tail=3, dose=0, method=c("z", "boott"), conf.l
     res <- rbind(auc.obs[1,-5],res)
   }
 
-  r.names <- c('AUC to tlast', 'AUC to infinity', 'AUMC to infinity', 'Mean residence time', 'non-compartmental half-life', 'Clearance', 'Volume of distribution at steady state')
+  r.names <- c('AUC to tlast', 'AUC Dose', 'AUC to infinity', 'AUMC to infinity', 'Mean residence time', 'non-compartmental half-life', 'Clearance', 'Volume of distribution at steady state')
   rownames(res) <- paste(conf.level*100,'% CI for the ', rep(r.names,each=length(levels(res$method))), ' using a ', sort(levels(res$method),decreasing=TRUE),' distribution', sep='')
 
   if(!any(method=='z')){
