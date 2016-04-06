@@ -18,6 +18,7 @@ export(
        nca.complete,
        nca.ssd,
        PKNews,
+       pk.results,
        plot.halflife,
        plot.PK,
        print.PK,
